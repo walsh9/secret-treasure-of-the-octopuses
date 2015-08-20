@@ -5,6 +5,8 @@
   <title>Secret Treasure of the Octopuses</title>
   <style>
     body {
+      font-family: sans-serif;
+      color: #f5f5f5;
       margin:0;
       padding:0;
       background: black;
@@ -12,24 +14,35 @@
     .main {
       padding: 20px;
     }
-    #canvas, .instructions {
+    #canvas, .instructions, ul.links {
       display: block;
-      margin: auto;
+      margin: 0 auto;
       width: 800px;
     }
     p {
-      font-family: sans-serif;
-      color: #f5f5f5;
       margin: 0;
       padding: 0;
     }
     h1 {
-      font-family: sans-serif;
-      color: #f5f5f5;
+
       margin: 0;
       padding: 0;
       text-align: center;     
     }
+    ul.links {
+      list-style: none;
+      display: block;
+      padding: 0;
+    }
+    ul.links li {
+      margin: 0;
+      padding: 0;
+    }
+    ul.links li a {
+      text-decoration: none;
+      color: #666699;
+    }
+
     img {
       display:none;
     }
@@ -46,6 +59,9 @@
       <p>Move up and down with arrow keys.</p>
       <p>Reload the page to start a new game.</p>
     </div>
+    <ul class="links">
+    <li><a href="https://github.com/walsh9/secret-treasure-of-the-octopuses">View source on Github.</a></li>
+    </ul>
   </div>
   <script>
     var canvas = document.getElementById("canvas");
