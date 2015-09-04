@@ -4,7 +4,9 @@
     var h = canvas.height;
     var ctx = canvas.getContext("2d");
     var keysDown = {};
-    var characters, treasure, boat, player, score, gameOver, level;
+    var characters, treasure, boat, player, score, gameOver, level, air;
+    var muted = false;
+    var readySounds = [];
 
     /* Keyboard handling */
     addEventListener("keydown", function (e) {
@@ -20,7 +22,18 @@
         e.preventDefault();
         }
     }, false);
-
+    var playSound = function(sound) {
+        if (muted) {return;}
+        var sfx = document.querySelector('#' + sound);
+        var audioContext = window.AudioContext || window.webkitAudioContext;
+        if (audioContext && readySounds.indexOf(sound) == -1) {
+            var context = new audioContext();
+            var source = context.createMediaElementSource(sfx);
+            source.connect(context.destination);
+            readySounds.push(sound);
+        }
+        sfx.play();
+    };
     /* Base objects */
     var Rect = function(x, y, w, h)
     {
@@ -47,7 +60,7 @@
     var Item = function(x, y, sprite) {
         this.posX = x || 0;
         this.posY = y || 0;
-        this.visible = true;
+        this.held = false;
         this.sprite = sprite || null;
     };
 
@@ -60,16 +73,19 @@
     };
     var playerMove = function(timePassed) {
         if (38 in keysDown) { // up
-            this.move(0, -this.moveSpeed * timePassed * 100);
+            this.move(0, -this.moveSpeed * timePassed * 125);
         }
         if (40 in keysDown) { // down
-            this.move(0, this.moveSpeed * timePassed * 100);
+            this.move(0, this.moveSpeed * timePassed * 125);
         }
         if (39 in keysDown) { // right
             this.dir = 1;
         }
         if (37 in keysDown) { // left
             this.dir = -1;
+        }
+        if (player.treasureCount > 0) {
+            this.move(0, this.moveSpeed * timePassed * 25 * player.treasureCount);
         }
     };
 
@@ -78,7 +94,7 @@
         diver: new Rect(0,0,31,31),
         octo: new Rect(0,32,32,32),
         boat: new Rect(0,64,32,32),
-        treasure: new Rect(0,96,32,32),
+        treasure: new Rect(0,97,32,31),
     };
     var collisionBoxes = {
         diver: new Rect(2,6,26,6),
@@ -106,9 +122,13 @@
        ctx.drawImage(sprites, sprite.x, sprite.y, sprite.w, sprite.h, x, y, sprite.w, sprite.h);
     };
     var drawGameOver = function(ctx) {
+        playSound('die');
         ctx.font = "100px monospace";
         ctx.fillStyle = "white";
-        ctx.fillText("GAME OVER", 130, h / 2);
+        ctx.textAlign = 'center';
+        ctx.fillText("GAME OVER", w / 2, h / 2);
+        ctx.font = "25px monospace";
+        ctx.fillText("Press [R] to restart.", w / 2, h / 2 + 60);
     };
 
     /* Main init, runs once */
@@ -123,8 +143,9 @@
 
     /* Level init, runs each level. */
     var initLevel = function(level) {
+        air = 50;
         characters = [];
-        treasure.visible = true;
+        treasure.held = false;
         player = new Character(w / 2, h * 0.2, 1, sprites.diver, collisionBoxes.diver, true);
         player.treasureCount = 0;
         player.update = playerMove;
@@ -133,7 +154,7 @@
         for (var i = 0; i <= level * 2; i++) {
             // Can get faster each level, randomized for varied speeds.
             var speed = 1 + Math.random() * (level * 0.15);
-            var octopus = new Character(Math.random() * w, Math.random() *  h * 0.6 + (h * 0.25), speed, sprites.octo, collisionBoxes.octo);
+            var octopus = new Character(Math.random() * w, Math.random() *  h * 0.56 + (h * 0.25), speed, sprites.octo, collisionBoxes.octo);
             octopus.dir = Math.random()<0.5 ? 1 : -1;
             octopus.update = octoMove;
             characters.push(octopus);
@@ -142,19 +163,31 @@
 
     /* Update game state */
     var update = function (timePassed) {
+        if (air <= 0) {
+            gameOver = true;
+        }
+        air -= timePassed;
         characters.forEach(function(character) {
             character.update(timePassed);
         });
 
-        if (treasure.visible && player.posY > 518) {
+        if (!treasure.held && player.posY > 518) {
+            playSound('grab');
             player.treasureCount += 1;
-            treasure.visible = false; //just hide it off screen
+            treasure.held = true;
         }
         if (player.treasureCount > 0 && player.posY < 121) {
-            score += player.treasureCount * 1000 * level;
+            playSound('score');
+            var levelBonus = 1 + (level - 1) * 0.2;
+            score += player.treasureCount * 500 * levelBonus;
+            score += Math.ceil(air) * 2 * 5 * levelBonus;
             player.treasureCount = 0;
             level += 1;
             initLevel(level);
+        }
+        if (77 in keysDown) {  // 'M'
+            delete keysDown[77];
+            muted = !muted;
         }
     };
 
@@ -173,10 +206,6 @@
         ctx.fillRect(0, h * 0.9, w, h * 0.1);
         //draw boat
         drawSprite(ctx, boat.sprite, boat.posX - boat.sprite.w / 2, boat.posY - boat.sprite.h);
-        //draw treasure
-        if (treasure.visible) {
-            drawSprite(ctx, treasure.sprite, treasure.posX - treasure.sprite.w / 2, treasure.posY - treasure.sprite.h);
-        }
         //draw characters
         characters.forEach(function(character) {
             if (character.dir == -1) {
@@ -190,13 +219,28 @@
                 drawSprite(ctx, character.sprite, character.posX - character.sprite.w / 2, character.posY);
             }
         });
+        //draw treasure
+        if (treasure.held) {
+            drawSprite(ctx, treasure.sprite, treasure.posX - treasure.sprite.w / 2, player.posY - 26);
+        } else {
+            drawSprite(ctx, treasure.sprite, treasure.posX - treasure.sprite.w / 2, treasure.posY - treasure.sprite.h);
+        }
+        //draw sound icon {
+        ctx.font = "25px";
+        if (muted) {
+            ctx.fillStyle = "#4444bb";
+        } else {
+            ctx.fillStyle = "white";
+        }
+        ctx.fillText("♪", w - 20, 30);
         //print level
         //print score
         ctx.font = "25px monospace";
         ctx.fillStyle = "white";
         ctx.fillText("LEVEL: " + level, 10, 30);
         ctx.fillText("SCORE: " + score, 10, 60);
-
+        if (air < 10) (ctx.fillStyle = "#ff6666");
+        ctx.fillText("AIR: " + Math.ceil(air), 10, 90);
     };
 
     /* Game loop */
@@ -220,6 +264,11 @@
         }
         else {
             drawGameOver(ctx);
+            window.addEventListener("keydown", function(e) {
+                if(e.keyCode === 82) {
+                    location.reload();
+                }
+            }, false);
         }
     };
 
