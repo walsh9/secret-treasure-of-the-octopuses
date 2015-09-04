@@ -125,7 +125,10 @@
         playSound('die');
         ctx.font = "100px monospace";
         ctx.fillStyle = "white";
-        ctx.fillText("GAME OVER", 130, h / 2);
+        ctx.textAlign = 'center';
+        ctx.fillText("GAME OVER", w / 2, h / 2);
+        ctx.font = "25px monospace";
+        ctx.fillText("Press [R] to restart.", w / 2, h / 2 + 60);
     };
 
     /* Main init, runs once */
@@ -261,6 +264,11 @@
         }
         else {
             drawGameOver(ctx);
+            window.addEventListener("keydown", function(e) {
+                if(e.keyCode === 82) {
+                    location.reload();
+                }
+            }, false);
         }
     };
 
