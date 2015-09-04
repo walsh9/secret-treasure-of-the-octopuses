@@ -6,7 +6,7 @@
     var keysDown = {};
     var characters, treasure, boat, player, score, gameOver, level, air;
     var muted = false;
-    var audioContext = window.AudioContext || window.webkitAudioContext;
+    var readySounds = [];
 
     /* Keyboard handling */
     addEventListener("keydown", function (e) {
@@ -22,14 +22,15 @@
         e.preventDefault();
         }
     }, false);
-
     var playSound = function(sound) {
         if (muted) {return;}
         var sfx = document.querySelector('#' + sound);
-        if (audioContext) {
+        var audioContext = window.AudioContext || window.webkitAudioContext;
+        if (audioContext && readySounds.indexOf(sound) == -1) {
             var context = new audioContext();
             var source = context.createMediaElementSource(sfx);
             source.connect(context.destination);
+            readySounds.push(sound);
         }
         sfx.play();
     };
