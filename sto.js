@@ -137,7 +137,7 @@
         for (var i = 0; i <= level * 2; i++) {
             // Can get faster each level, randomized for varied speeds.
             var speed = 1 + Math.random() * (level * 0.15);
-            var octopus = new Character(Math.random() * w, Math.random() *  h * 0.6 + (h * 0.25), speed, sprites.octo, collisionBoxes.octo);
+            var octopus = new Character(Math.random() * w, Math.random() *  h * 0.56 + (h * 0.25), speed, sprites.octo, collisionBoxes.octo);
             octopus.dir = Math.random()<0.5 ? 1 : -1;
             octopus.update = octoMove;
             characters.push(octopus);
