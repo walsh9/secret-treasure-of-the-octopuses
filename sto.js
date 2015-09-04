@@ -47,7 +47,7 @@
     var Item = function(x, y, sprite) {
         this.posX = x || 0;
         this.posY = y || 0;
-        this.visible = true;
+        this.held = false;
         this.sprite = sprite || null;
     };
 
@@ -78,7 +78,7 @@
         diver: new Rect(0,0,31,31),
         octo: new Rect(0,32,32,32),
         boat: new Rect(0,64,32,32),
-        treasure: new Rect(0,96,32,32),
+        treasure: new Rect(0,97,32,31),
     };
     var collisionBoxes = {
         diver: new Rect(2,6,26,6),
@@ -124,7 +124,7 @@
     /* Level init, runs each level. */
     var initLevel = function(level) {
         characters = [];
-        treasure.visible = true;
+        treasure.held = false;
         player = new Character(w / 2, h * 0.2, 1, sprites.diver, collisionBoxes.diver, true);
         player.treasureCount = 0;
         player.update = playerMove;
@@ -146,9 +146,9 @@
             character.update(timePassed);
         });
 
-        if (treasure.visible && player.posY > 518) {
+        if (!treasure.held && player.posY > 518) {
             player.treasureCount += 1;
-            treasure.visible = false; //just hide it off screen
+            treasure.held = true;
         }
         if (player.treasureCount > 0 && player.posY < 121) {
             score += player.treasureCount * 1000 * level;
@@ -173,10 +173,6 @@
         ctx.fillRect(0, h * 0.9, w, h * 0.1);
         //draw boat
         drawSprite(ctx, boat.sprite, boat.posX - boat.sprite.w / 2, boat.posY - boat.sprite.h);
-        //draw treasure
-        if (treasure.visible) {
-            drawSprite(ctx, treasure.sprite, treasure.posX - treasure.sprite.w / 2, treasure.posY - treasure.sprite.h);
-        }
         //draw characters
         characters.forEach(function(character) {
             if (character.dir == -1) {
@@ -190,6 +186,12 @@
                 drawSprite(ctx, character.sprite, character.posX - character.sprite.w / 2, character.posY);
             }
         });
+        //draw treasure
+        if (treasure.held) {
+            drawSprite(ctx, treasure.sprite, treasure.posX - treasure.sprite.w / 2, player.posY - 26);
+        } else {
+            drawSprite(ctx, treasure.sprite, treasure.posX - treasure.sprite.w / 2, treasure.posY - treasure.sprite.h);
+        }
         //print level
         //print score
         ctx.font = "25px monospace";
