@@ -4,7 +4,7 @@
     var h = canvas.height;
     var ctx = canvas.getContext("2d");
     var keysDown = {};
-    var characters, treasure, boat, player, score, gameOver, level;
+    var characters, treasure, boat, player, score, gameOver, level, air;
 
     /* Keyboard handling */
     addEventListener("keydown", function (e) {
@@ -126,6 +126,7 @@
 
     /* Level init, runs each level. */
     var initLevel = function(level) {
+        air = 50;
         characters = [];
         treasure.held = false;
         player = new Character(w / 2, h * 0.2, 1, sprites.diver, collisionBoxes.diver, true);
@@ -145,6 +146,10 @@
 
     /* Update game state */
     var update = function (timePassed) {
+        if (air <= 0) {
+            gameOver = true;
+        }
+        air -= timePassed;
         characters.forEach(function(character) {
             character.update(timePassed);
         });
@@ -154,7 +159,9 @@
             treasure.held = true;
         }
         if (player.treasureCount > 0 && player.posY < 121) {
-            score += player.treasureCount * 1000 * level;
+            var levelBonus = 1 + (level - 1) * 0.2;
+            score += player.treasureCount * 500 * levelBonus;
+            score += Math.ceil(air) * 2 * 5 * levelBonus;
             player.treasureCount = 0;
             level += 1;
             initLevel(level);
@@ -201,7 +208,8 @@
         ctx.fillStyle = "white";
         ctx.fillText("LEVEL: " + level, 10, 30);
         ctx.fillText("SCORE: " + score, 10, 60);
-
+        if (air < 10) (ctx.fillStyle = "#ff6666");
+        ctx.fillText("AIR: " + Math.ceil(air), 10, 90);
     };
 
     /* Game loop */
