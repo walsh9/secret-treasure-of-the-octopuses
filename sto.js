@@ -182,6 +182,10 @@
             level += 1;
             initLevel(level);
         }
+        if (77 in keysDown) {  // 'M'
+            delete keysDown[77];
+            muted = !muted;
+        }
     };
 
     /* Draw graphics to canvas */
@@ -218,6 +222,14 @@
         } else {
             drawSprite(ctx, treasure.sprite, treasure.posX - treasure.sprite.w / 2, treasure.posY - treasure.sprite.h);
         }
+        //draw sound icon {
+        ctx.font = "25px";
+        if (muted) {
+            ctx.fillStyle = "#4444bb";
+        } else {
+            ctx.fillStyle = "white";
+        }
+        ctx.fillText("♪", w - 20, 30);
         //print level
         //print score
         ctx.font = "25px monospace";
