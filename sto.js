@@ -5,6 +5,8 @@
     var ctx = canvas.getContext("2d");
     var keysDown = {};
     var characters, treasure, boat, player, score, gameOver, level, air;
+    var muted = false;
+    var audioContext = window.AudioContext || window.webkitAudioContext;
 
     /* Keyboard handling */
     addEventListener("keydown", function (e) {
@@ -21,6 +23,16 @@
         }
     }, false);
 
+    var playSound = function(sound) {
+        if (muted) {return;}
+        var sfx = document.querySelector('#' + sound);
+        if (audioContext) {
+            var context = new audioContext();
+            var source = context.createMediaElementSource(sfx);
+            source.connect(context.destination);
+        }
+        sfx.play();
+    };
     /* Base objects */
     var Rect = function(x, y, w, h)
     {
@@ -109,6 +121,7 @@
        ctx.drawImage(sprites, sprite.x, sprite.y, sprite.w, sprite.h, x, y, sprite.w, sprite.h);
     };
     var drawGameOver = function(ctx) {
+        playSound('die');
         ctx.font = "100px monospace";
         ctx.fillStyle = "white";
         ctx.fillText("GAME OVER", 130, h / 2);
@@ -155,10 +168,12 @@
         });
 
         if (!treasure.held && player.posY > 518) {
+            playSound('grab');
             player.treasureCount += 1;
             treasure.held = true;
         }
         if (player.treasureCount > 0 && player.posY < 121) {
+            playSound('score');
             var levelBonus = 1 + (level - 1) * 0.2;
             score += player.treasureCount * 500 * levelBonus;
             score += Math.ceil(air) * 2 * 5 * levelBonus;

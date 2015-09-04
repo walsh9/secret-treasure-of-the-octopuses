@@ -43,13 +43,25 @@
       color: #666699;
     }
 
-    img {
+    img, audio {
       display:none;
     }
   </style>
 </head>
 <body>
   <img id="sprites" src="sprites.png"/>
+  <audio id="die" preload="auto">
+    <source src="sound/die.ogg" type="audio/ogg">
+    <source src="sound/die.mp3" type="audio/mpeg">
+  </audio>  
+  <audio id="grab" preload="auto">
+    <source src="sound/grab.ogg" type="audio/ogg">
+    <source src="sound/grab.mp3" type="audio/mpeg">
+  </audio>  
+  <audio id="score" preload="auto">
+    <source src="sound/score.ogg" type="audio/ogg">
+    <source src="sound/score.mp3" type="audio/mpeg">
+  </audio>
   <div class="main">
   <h1>Secret Treasure of the Octopuses</h1>
     <canvas id="canvas" width="800" height="600"></canvas>
