@@ -60,16 +60,19 @@
     };
     var playerMove = function(timePassed) {
         if (38 in keysDown) { // up
-            this.move(0, -this.moveSpeed * timePassed * 100);
+            this.move(0, -this.moveSpeed * timePassed * 125);
         }
         if (40 in keysDown) { // down
-            this.move(0, this.moveSpeed * timePassed * 100);
+            this.move(0, this.moveSpeed * timePassed * 125);
         }
         if (39 in keysDown) { // right
             this.dir = 1;
         }
         if (37 in keysDown) { // left
             this.dir = -1;
+        }
+        if (player.treasureCount > 0) {
+            this.move(0, this.moveSpeed * timePassed * 25 * player.treasureCount);
         }
     };
 
