@@ -6,6 +6,7 @@
     var keysDown = {};
     var characters, treasure, boat, player, score, gameOver, level, air;
     var muted = false;
+    var paused = false;
     var readySounds = [];
 
     /* Keyboard handling */
@@ -121,14 +122,24 @@
        var sprites = document.getElementById("sprites");
        ctx.drawImage(sprites, sprite.x, sprite.y, sprite.w, sprite.h, x, y, sprite.w, sprite.h);
     };
+    var drawPaused = function(ctx) {
+        drawBigStatus(ctx, "PAUSED", "Press [P] to unpause.");
+    };
     var drawGameOver = function(ctx) {
         playSound('die');
+        drawBigStatus(ctx, "GAME OVER", "Press [R] to restart.");
+    };
+    var drawBigStatus = function(ctx, bigText, subText) {
+        ctx.save();
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.fillRect(0,0,w,h);
         ctx.font = "100px monospace";
         ctx.fillStyle = "white";
         ctx.textAlign = 'center';
-        ctx.fillText("GAME OVER", w / 2, h / 2);
+        ctx.fillText(bigText, w / 2, h / 2);
         ctx.font = "25px monospace";
-        ctx.fillText("Press [R] to restart.", w / 2, h / 2 + 60);
+        ctx.fillText(subText, w / 2, h / 2 + 60);
+        ctx.restore();        
     };
 
     /* Main init, runs once */
@@ -246,12 +257,16 @@
     /* Game loop */
     // Special thanks to http://gafferongames.com/game-physics/fix-your-timestep/ 
     var runTime = 0;
-    var timeStep = 1 / 30; 
-    var currentTime = Date.now();
-    var mainLoop = function () {
+    var timeStep = 1 / 30;
+    var startGameLoop = function() {
+        paused = false;
+        var startTime = Date.now();
+        mainLoop(startTime);
+    };
+    var mainLoop = function (startTime) {
             var newTime = Date.now();
-            var frameTime = newTime - currentTime;
-            currentTime = newTime;
+            var frameTime = newTime - startTime;
+            startTime = newTime;
             while (frameTime > 0) {
                 var delta = Math.min(frameTime, timeStep);
                 update(delta / 1000);
@@ -259,21 +274,34 @@
                 runTime += delta;
             }
         draw();
-        if (!gameOver) {
-            requestAnimationFrame(mainLoop, canvas);
-        }
-        else {
+        if (!gameOver && !paused) {
+            requestAnimationFrame(function() { mainLoop(startTime); }, canvas);
+        } else if (paused) {
+            drawPaused(ctx);
+        } else {
             drawGameOver(ctx);
             window.addEventListener("keydown", function(e) {
-                if(e.keyCode === 82) {
+                if(e.keyCode === 82) { // "R"
                     location.reload();
                 }
             }, false);
         }
     };
 
+    window.addEventListener("blur", function(e) {
+            paused = true;
+    }, false); 
+
+    window.addEventListener("keydown", function(e) {
+        if(e.keyCode === 80) { // "P"
+            paused = !paused;
+            if (!paused) {
+                startGameLoop();
+            }
+        }
+    }, false);
     /* Driver code*/
     initGame();
     initLevel(1);
-    mainLoop();
+    startGameLoop();
 })(canvas);
